@@ -70,6 +70,54 @@ drop table fact_prices;
 drop table fact_news;
 --------------------------------------
 
-select company_name from dimens_assets_details
-group by market_cap_cat,company_name
-having market_cap_cat =	'Large';
+-- Creating a table for sample 100 stocks
+-- Taking 50 30 20 split for large, mid and small cap
+
+create table sample_set_100 as
+(
+select * from dimens_assets_details
+where market_cap_cat = 'Large'
+order by random()
+limit 50
+)
+union all
+(
+select * from dimens_assets_details
+where market_cap_cat = 'Mid'
+order by random()
+limit 30
+)
+union all
+(
+select * from dimens_assets_details
+where market_cap_cat = 'Small'
+order by random()
+limit 20
+);
+
+-- Re_run to randomzie the sample 
+----------------------------------
+-- Chk the distribution
+select market_cap_cat, count(*) as stock_count
+from sample_set_100
+group by market_cap_cat
+order by stock_count desc;
+---------------------------------
+select * from fact_fundamentals;
+------- Find non_null count
+select
+count(pe_ratio) as pe,
+count(peg_ratio) as peg,
+count(roe_percent) as roe,
+count(Gross_profits) as gr_profit,
+count(Revenue_growth) as rev_gro,
+count(Earnings_growth) as ear_gro,
+count(Operating_margins) as op_marg,
+count(EBITA_margins) as ebi_marg,
+count(Debt_to_equity) as d_e,
+count(Institutional_held_percent) as inst_hold,
+count(Fifty_two_week_change) as week_change
+from fact_fundamentals;
+---------------------------------------------------
+
+
