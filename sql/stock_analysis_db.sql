@@ -61,6 +61,7 @@ CREATE TABLE user_queries (
 );
 ----------------------------------------
 TRUNCATE Table dimens_assets_details restart identity cascade; --to reset to push data again
+
 select * from dimens_assets_details;
 
 -- If need to drop the tables:
@@ -120,4 +121,15 @@ count(Fifty_two_week_change) as week_change
 from fact_fundamentals;
 ---------------------------------------------------
 
-
+select * from fact_prices;
+-- Check for total_days data collected
+SELECT 
+    d.ticker, p.asset_id,
+    MIN(trade_date) as start_date, 
+    MAX(trade_date) as end_date, 
+    COUNT(*) as total_days
+FROM fact_prices p
+JOIN sample_set_100 d ON p.asset_id = d.asset_id
+GROUP BY d.ticker,p.asset_id
+ORDER BY p.asset_id ASC;
+-----------------------------------------------------
