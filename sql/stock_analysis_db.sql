@@ -98,6 +98,7 @@ limit 20
 
 -- Re_run to randomzie the sample 
 ----------------------------------
+select * from sample_set_100;
 -- Chk the distribution
 select market_cap_cat, count(*) as stock_count
 from sample_set_100
@@ -133,3 +134,86 @@ JOIN sample_set_100 d ON p.asset_id = d.asset_id
 GROUP BY d.ticker,p.asset_id
 ORDER BY p.asset_id ASC;
 -----------------------------------------------------
+select * from fact_news;
+select n.asset_id,company_name,sentiment_score,news_summary
+from fact_news n join sample_set_100 d
+on n.asset_id = d.asset_id
+order by n.asset_id asc;
+
+select  count(distinct asset_id) from fact_news;
+
+with news_table as (
+select n.asset_id,company_name,sentiment_score,news_summary
+from fact_news n join sample_set_100 d
+on n.asset_id = d.asset_id
+order by n.asset_id asc
+)
+select asset_id,ticker,company_name from sample_set_100
+where asset_id not in (
+select n.asset_id
+from fact_news n join sample_set_100 d
+on n.asset_id = d.asset_id
+group by n.asset_id
+order by n.asset_id asc
+)
+-------------------------------------------------
+
+-- Filling the missing PEG, PE,roe and Debt null values with max number or zero.
+
+select max(peg_ratio) as max_peg
+from fact_fundamentals
+
+create or replace view stock_scoring as
+with fundamental_adj as (
+select fa.asset_id,
+COALESCE(case when fa.peg_ratio<=0 then 99 else fa.peg_ratio end,99) as adj_peg,
+coalesce(fa.roe_percent,0) as adj_roe_percent,
+coalesce(fa.debt_to_equity,5) as adj_debt_to_equity
+from fact_fundamentals fa
+),
+sentiment_avg as(
+select asset_id,
+avg(sentiment_score) as avg_senti_score
+from fact_news n
+group by asset_id
+)
+
+select  d.asset_id,d.ticker,d.company_name,
+		d.sector, d.industry,d.market_cap_cat,
+		f.adj_peg,f.adj_roe_percent,
+		f.adj_debt_to_equity,
+		coalesce(s.avg_senti_score,0) as adj_senti_score ,
+
+		rank() over (order by f.adj_peg asc) as peg_rank,
+		rank() over (order by f.adj_roe_percent desc) as roe_rank,
+		rank() over (order by f.adj_debt_to_equity asc) as de_rank
+
+from sample_set_100 d left join fundamental_adj f
+on d.asset_id = f.asset_id
+left join sentiment_avg s 
+on d.asset_id = s.asset_id;
+
+select * from stock_scoring;
+
+
+
+
+
+
+
+
+
+
+SELECT 
+        f.asset_id,
+        -- Clean PEG: If null or negative, assign a terrible score (99) to push it to the bottom
+        COALESCE(CASE WHEN f.peg_ratio <= 0 THEN 99 ELSE f.peg_ratio END, 99) as clean_peg,
+        -- Clean ROE: If null, assign 0
+        COALESCE(f.roe_percent, 0) as clean_roe,
+        -- Clean Debt: If null, assume high debt (e.g., 5.0) to penalize
+        COALESCE(f.debt_to_equity, 5.0) as clean_debt
+    FROM fact_fundamentals f
+
+
+
+
