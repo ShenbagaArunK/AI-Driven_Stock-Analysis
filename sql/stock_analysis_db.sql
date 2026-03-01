@@ -158,7 +158,8 @@ order by n.asset_id asc
 )
 -------------------------------------------------
 
--- Filling the missing PEG, PE,roe and Debt null values with max number or zero.
+-- Filling the missing PEG,ROE and Debt null values with max number or zero.
+-- Ranking on basis on metrics and sentiment of each stocks with the news
 
 select max(peg_ratio) as max_peg
 from fact_fundamentals
@@ -182,38 +183,44 @@ select  d.asset_id,d.ticker,d.company_name,
 		d.sector, d.industry,d.market_cap_cat,
 		f.adj_peg,f.adj_roe_percent,
 		f.adj_debt_to_equity,
-		coalesce(s.avg_senti_score,0) as adj_senti_score ,
+		coalesce(s.avg_senti_score,0) as adj_senti_score , -- score range from -1 to 1
 
 		rank() over (order by f.adj_peg asc) as peg_rank,
 		rank() over (order by f.adj_roe_percent desc) as roe_rank,
-		rank() over (order by f.adj_debt_to_equity asc) as de_rank
-
+		rank() over (order by f.adj_debt_to_equity asc) as de_rank,
+		rank() over (order by coalesce(avg_senti_score,0) desc) as sentimental_rank
+ 
 from sample_set_100 d left join fundamental_adj f
 on d.asset_id = f.asset_id
 left join sentiment_avg s 
 on d.asset_id = s.asset_id;
-
+--------------------------------------
 select * from stock_scoring;
+--------------------------------------
+-- selecting the anchor 50 stocks using the rank nd scores 
+drop table if exists anchor_50;
 
+create table anchor_50 as
+select asset_id,
+		ticker,
+		company_name,
+		sector,
+		market_cap_cat,
+		adj_senti_score,
+		(peg_rank+roe_rank+de_rank+sentimental_rank) as total_sentiment_score
+from stock_scoring 
+order by total_sentiment_score ASC
+limit 50;
 
-
-
-
-
-
-
-
-
-SELECT 
-        f.asset_id,
-        -- Clean PEG: If null or negative, assign a terrible score (99) to push it to the bottom
-        COALESCE(CASE WHEN f.peg_ratio <= 0 THEN 99 ELSE f.peg_ratio END, 99) as clean_peg,
-        -- Clean ROE: If null, assign 0
-        COALESCE(f.roe_percent, 0) as clean_roe,
-        -- Clean Debt: If null, assume high debt (e.g., 5.0) to penalize
-        COALESCE(f.debt_to_equity, 5.0) as clean_debt
-    FROM fact_fundamentals f
-
+----------------------------------------------
+-- updating the anchor status in dimensional table
+update dimens_assets_details
+set is_anchor = True
+where ticker in (select ticker from anchor_50);
+----------------------------------------------
+select * from dimens_assets_details
+order by is_anchor desc;
+--------------------------------
 
 
 
