@@ -134,6 +134,7 @@ JOIN sample_set_100 d ON p.asset_id = d.asset_id
 GROUP BY d.ticker,p.asset_id
 ORDER BY p.asset_id ASC;
 -----------------------------------------------------
+--- checking the news table contents
 select * from fact_news;
 select n.asset_id,company_name,sentiment_score,news_summary
 from fact_news n join sample_set_100 d
@@ -217,10 +218,36 @@ limit 50;
 update dimens_assets_details
 set is_anchor = True
 where ticker in (select ticker from anchor_50);
-----------------------------------------------
+---------------------------------------
 select * from dimens_assets_details
 order by is_anchor desc;
---------------------------------
+----------------------------------
+-- Create moving average view
 
+create or replace view stock_momentum as
+with ranked_prices as(
+select asset_id, trade_date , close_price,
+		avg(close_price) over (partition by asset_id order by trade_date 
+			rows between 49 preceding and current row) as sma_50,
 
+		avg(close_price) over (partition by asset_id order by trade_date 
+			rows between 199 preceding and current row) as sma_200,
 
+		row_number() over (partition by asset_id order by trade_date desc)
+					as day_rank
+
+		from fact_prices
+)
+select d.asset_id, d.company_name, r.trade_date,
+		round(cast(r.close_price as numeric),2) as current_price,
+		round(cast(r.sma_50 as numeric),2) as sma_50,
+		round(cast(r.sma_200 as numeric),2) as sma_200,
+		case
+			when r.close_price > r.sma_200 and r.sma_50 > r.sma_200 then 'Strongly Bullish'
+			when r.close_price> r.sma_200 then 'Bullish (> 200 SMA)'
+			else 'Bearish' end as momentum_signal
+		from ranked_prices r join dimens_assets_details d
+		on r.asset_id = d.asset_id
+		where r.day_rank = 1;
+------
+select * from stock_momentum;
