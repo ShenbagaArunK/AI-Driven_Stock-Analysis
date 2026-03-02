@@ -251,3 +251,5 @@ select d.asset_id, d.company_name, r.trade_date,
 		where r.day_rank = 1;
 ------
 select * from stock_momentum;
+select * from anchor_50;
+select * from fact_fundamentals;
