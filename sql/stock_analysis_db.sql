@@ -218,6 +218,10 @@ limit 50;
 update dimens_assets_details
 set is_anchor = True
 where ticker in (select ticker from anchor_50);
+
+update sample_set_100
+set is_anchor = True
+where ticker in (select ticker from anchor_50);
 ---------------------------------------
 select * from dimens_assets_details
 order by is_anchor desc;
