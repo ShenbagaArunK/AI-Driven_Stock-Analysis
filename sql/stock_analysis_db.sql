@@ -1,3 +1,4 @@
+--------------- Creating requried tables -----------------------
 -- 1.Asset summary table:
 CREATE TABLE dimens_assets_details (
 	Asset_Id Serial Primary key,
@@ -63,16 +64,10 @@ CREATE TABLE user_queries (
 TRUNCATE Table dimens_assets_details restart identity cascade; --to reset to push data again
 
 select * from dimens_assets_details;
-
--- If need to drop the tables:
-drop table dimens_assets_details;
-drop table fact_fundamentals;
-drop table fact_prices;
-drop table fact_news;
 --------------------------------------
 
 -- Creating a table for sample 100 stocks
--- Taking 50 30 20 split for large, mid and small cap
+-- Taking 50 30 20 split for large, mid and small cap in random 
 
 create table sample_set_100 as
 (
@@ -98,15 +93,13 @@ limit 20
 
 -- Re_run to randomzie the sample 
 ----------------------------------
-select * from sample_set_100;
--- Chk the distribution
+-- Chking the distribution
 select market_cap_cat, count(*) as stock_count
 from sample_set_100
 group by market_cap_cat
 order by stock_count desc;
 ---------------------------------
-select * from fact_fundamentals;
-------- Find non_null count
+------- Find non_null count from fundamentals
 select
 count(pe_ratio) as pe,
 count(peg_ratio) as peg,
@@ -121,9 +114,7 @@ count(Institutional_held_percent) as inst_hold,
 count(Fifty_two_week_change) as week_change
 from fact_fundamentals;
 ---------------------------------------------------
-
-select * from fact_prices;
--- Check for total_days data collected
+-- Check for total_days data collected in prices table
 SELECT 
     d.ticker, p.asset_id,
     MIN(trade_date) as start_date, 
@@ -135,21 +126,14 @@ GROUP BY d.ticker,p.asset_id
 ORDER BY p.asset_id ASC;
 -----------------------------------------------------
 --- checking the news table contents
-select * from fact_news;
 select n.asset_id,company_name,sentiment_score,news_summary
 from fact_news n join sample_set_100 d
 on n.asset_id = d.asset_id
 order by n.asset_id asc;
-
+-- Stocks count with news data
 select  count(distinct asset_id) from fact_news;
-
-with news_table as (
-select n.asset_id,company_name,sentiment_score,news_summary
-from fact_news n join sample_set_100 d
-on n.asset_id = d.asset_id
-order by n.asset_id asc
-)
-select asset_id,ticker,company_name from sample_set_100
+-- Stocks for news data is not available
+select asset_id,ticker from sample_set_100
 where asset_id not in (
 select n.asset_id
 from fact_news n join sample_set_100 d
@@ -214,7 +198,7 @@ order by total_sentiment_score ASC
 limit 50;
 
 ----------------------------------------------
--- updating the anchor status in dimensional table
+-- updating the anchor status in dimensional table, sample_set_100
 update dimens_assets_details
 set is_anchor = True
 where ticker in (select ticker from anchor_50);
@@ -253,7 +237,4 @@ select d.asset_id, d.company_name, r.trade_date,
 		from ranked_prices r join dimens_assets_details d
 		on r.asset_id = d.asset_id
 		where r.day_rank = 1;
-------
-select * from stock_momentum;
-select * from anchor_50;
-select * from fact_fundamentals;
+-------------------------------------------------------
