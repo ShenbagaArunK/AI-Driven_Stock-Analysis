@@ -146,9 +146,6 @@ order by n.asset_id asc
 -- Filling the missing PEG,ROE and Debt null values with max number or zero.
 -- Ranking on basis on metrics and sentiment of each stocks with the news
 
-select max(peg_ratio) as max_peg
-from fact_fundamentals
-
 create or replace view stock_scoring as
 with fundamental_adj as (
 select fa.asset_id,
@@ -238,3 +235,5 @@ select d.asset_id, d.company_name, r.trade_date,
 		on r.asset_id = d.asset_id
 		where r.day_rank = 1;
 -------------------------------------------------------
+-- AI insights on Sample_100 stocks is pushed to database:
+select * from fact_ai_insights;
