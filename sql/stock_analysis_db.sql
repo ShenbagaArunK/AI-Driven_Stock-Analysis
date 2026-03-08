@@ -229,11 +229,15 @@ select d.asset_id, d.company_name, r.trade_date,
 		round(cast(r.sma_200 as numeric),2) as sma_200,
 		case
 			when r.close_price > r.sma_200 and r.sma_50 > r.sma_200 then 'Strongly Bullish'
-			when r.close_price> r.sma_200 then 'Bullish (> 200 SMA)'
-			else 'Bearish' end as momentum_signal
+			when r.close_price > r.sma_50 AND r.sma_50 <= r.sma_200 THEN 'Bullish'
+			when r.close_price < r.sma_50 and r.sma_50 > r.sma_200 then 'Bearish' 
+			when r.close_price < r.sma_50 and r.sma_50 <= r.sma_200 then 'Strongly Bearish'
+			else 'Neutral' end as momentum_signal
 		from ranked_prices r join dimens_assets_details d
 		on r.asset_id = d.asset_id
 		where r.day_rank = 1;
+-------------------
+select * from stock_momentum;
 -------------------------------------------------------
 -- AI insights on Sample_100 stocks is pushed to database:
 select * from fact_ai_insights;
