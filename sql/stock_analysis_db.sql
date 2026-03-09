@@ -99,6 +99,7 @@ from sample_set_100
 group by market_cap_cat
 order by stock_count desc;
 ---------------------------------
+select * from fact_fundamentals;
 ------- Find non_null count from fundamentals
 select
 count(pe_ratio) as pe,
