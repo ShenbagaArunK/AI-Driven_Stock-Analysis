@@ -142,6 +142,7 @@ group by n.asset_id
 order by n.asset_id asc
 )
 -------------------------------------------------
+-- Below steps are automated in python
 
 -- Filling the missing PEG,ROE and Debt null values with max number or zero.
 -- Ranking on basis on metrics and sentiment of each stocks with the news
@@ -197,14 +198,19 @@ limit 50;
 ----------------------------------------------
 -- updating the anchor status in dimensional table, sample_set_100
 update dimens_assets_details
-set is_anchor = True
-where ticker in (select ticker from anchor_50);
+set is_anchor = case
+when ticker in (select ticker from anchor_50) then True
+else False end ;
 
 update sample_set_100
-set is_anchor = True
-where ticker in (select ticker from anchor_50);
----------------------------------------
+set is_anchor = case
+when ticker in (select ticker from anchor_50) then True
+else False end;
+------------------------------------------------------
 select * from dimens_assets_details
+order by is_anchor desc;
+
+select * from sample_set_100
 order by is_anchor desc;
 ----------------------------------
 -- Create moving average view
