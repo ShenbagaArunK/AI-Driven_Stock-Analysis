@@ -248,3 +248,4 @@ select * from stock_momentum;
 -------------------------------------------------------
 -- AI insights on Sample_100 stocks is pushed to database:
 select * from fact_ai_insights;
+select * from user_queries;
