@@ -131,6 +131,15 @@ select n.asset_id,company_name,sentiment_score,news_summary
 from fact_news n join sample_set_100 d
 on n.asset_id = d.asset_id
 order by n.asset_id asc;
+
+select n.asset_id,company_name,Count(news_summary) as count
+from fact_news n join sample_set_100 d
+on n.asset_id = d.asset_id
+group by n.asset_id,company_name
+order by count asc;
+
+TRUNCATE table fact_news
+select * from fact_news
 -- Stocks count with news data
 select  count(distinct asset_id) from fact_news;
 -- Stocks for news data is not available
