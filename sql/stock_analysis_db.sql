@@ -68,7 +68,7 @@ select * from dimens_assets_details;
 
 -- Creating a table for sample 100 stocks
 -- Taking 50 30 20 split for large, mid and small cap in random 
-
+drop table if exists sample_set_100 cascade;
 create table sample_set_100 as
 (
 select * from dimens_assets_details
