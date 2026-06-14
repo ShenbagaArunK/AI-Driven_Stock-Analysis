@@ -1,0 +1,35 @@
+# AI-Driven Multi-Asset Intelligence & Portfolio Engine
+# Python 3.13+  |  Install:  pip install -r requirements.txt
+# Versions reflect those observed in the project notebooks; adjust as needed.
+
+# --- Core data processing ---
+pandas>=2.2
+numpy>=2.1
+yfinance>=0.2.40
+
+# --- Database (PostgreSQL) ---
+SQLAlchemy>=2.0.43
+psycopg2-binary>=2.9.11
+
+# --- Configuration ---
+python-dotenv>=1.1.0
+
+# --- Sentiment analysis ---
+vaderSentiment>=3.3.2
+
+# --- LLM: batch insight generation (Groq / Llama-3.3-70b) ---
+langchain>=1.2.14
+langchain-core>=1.2.23
+langchain-community>=0.4.1
+langchain-groq>=1.1.2
+groq>=0.37.1
+
+# --- LLM: natural-language SQL agent (Google Gemini 2.5-flash) ---
+langchain-google-genai>=2.0
+
+# --- Notebook environment ---
+jupyter>=1.0
+ipython>=9.0
+
+# --- Optional: in-notebook SQL magics (%sql) used during exploration ---
+ipython-sql>=0.5.0
